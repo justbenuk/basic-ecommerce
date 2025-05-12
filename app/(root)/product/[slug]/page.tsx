@@ -6,12 +6,29 @@ import { Card, CardContent } from "@/components/ui/card"
 import ProductPrice from "@/components/products/product-price"
 import ProductImages from "@/components/products/product-images"
 
-export default async function ProductDetailPage(props: {
+type ParamsProps = {
   params: Promise<{ slug: string }>
-}) {
+}
+
+//get the metadata
+export async function generateMetadata({ params }: ParamsProps) {
+  const { slug } = await params
+
+  const product = await getProductBySlug(slug)
+
+  if (product) {
+    return {
+      title: product.name,
+      description: product.description
+    }
+  }
+  return null
+}
+
+export default async function ProductDetailPage({ params }: ParamsProps) {
 
   //first we get the slug that was passed in
-  const { slug } = await props.params
+  const { slug } = await params
 
   //then we use that slug in the server action to get the product
   const product = await getProductBySlug(slug)
