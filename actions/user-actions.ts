@@ -4,6 +4,7 @@ import { signIn, signOut } from "@/auth"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { hashSync } from "bcrypt-ts-edge"
 import { db } from "@/db/db"
+import { formatError } from "@/lib/utils"
 
 //sign in user with credentials
 export async function signInWithCredentials(prevState: unknown, formData: FormData) {
@@ -60,7 +61,7 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
     if (isRedirectError(error)) {
       throw error
     }
-    return { success: false, message: 'User was not registered' }
+    return { success: false, message: formatError(error) }
 
   }
 }

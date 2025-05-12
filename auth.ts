@@ -47,15 +47,40 @@ export const config = {
     }),
   ],
   callbacks: {
-    async session({ session, user, trigger, token }) {
+    // eslint-disable-next-line
+    async session({ session, user, trigger, token }: any) {
       //set the user id from the token
-      session.user.id = token.sub as string
-
+      session.user.id = token.sub
+      session.user.role = token.role
+      session.user.name = token.name
       //if there is an update, set the user name
       if (trigger === 'update') {
         session.user.name = user.name
       }
       return session
+    },
+    // eslint-disable-next-line
+    async jwt({ token, user, trigger, session }: any) {
+      //assign user fields to the token
+
+      if (user) {
+        token.role = user.role as string
+
+        if (user.name === 'NO_NAME') {
+          token.name = user.emai!.split('@')[0]
+
+          //update the db for token name
+          await db.user.update({
+            where: {
+              id: user.id
+            },
+            data: {
+              name: token.name
+            }
+          })
+        }
+      }
+      return token
     }
   }
 } satisfies NextAuthConfig
