@@ -4,6 +4,7 @@ import { db } from './db/db'
 import Credentials from 'next-auth/providers/credentials'
 import { compareSync } from 'bcrypt-ts-edge'
 import type { NextAuthConfig } from 'next-auth'
+import { NextResponse } from 'next/server'
 
 export const config = {
   pages: {
@@ -81,6 +82,29 @@ export const config = {
         }
       }
       return token
+    },
+    // eslint-disable-next-line
+    authorized({ request, auth }: any) {
+      //check for a session cart id 
+      if (!request.cookies.get('sessionCartId')) {
+        //generate a new session cart id cookie
+        const sessionCartId = crypto.randomUUID()
+        //clone the request headers
+        const newRequestHeaders = new Headers(request.headers)
+
+        // build the response 
+        const response = NextResponse.next({
+          request: {
+            headers: newRequestHeaders
+          }
+        })
+
+        //set the new cart cookie
+        response.cookies.set('sessionCartId', sessionCartId)
+        return response
+      } else {
+        return true
+      }
     }
   }
 } satisfies NextAuthConfig

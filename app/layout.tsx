@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import { APP_NAME, APP_DESCRIPTION, SERVER_URL } from "@/lib/constants";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ['latin'] })
 
 //construct the way the metadata works
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps) {
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider defaultTheme="light" attribute='class' disableTransitionOnChange enableSystem>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

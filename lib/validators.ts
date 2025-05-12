@@ -34,3 +34,23 @@ export const signUpFormScheme = z.object({
   message: 'Passwords dont match',
   path: ['confirmPassword']
 })
+
+//cart schema
+export const cartItemScheme = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  name: z.string().min(1, 'Name is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  qty: z.number().int().nonnegative('Quantity must be a posative number'),
+  image: z.string().min(1, 'Image is required'),
+  price: currency
+})
+
+export const insertCartScheme = z.object({
+  items: z.array(cartItemScheme),
+  itemsPrice: currency,
+  totalPrice: currency,
+  taxPrice: currency,
+  shippingPrice: currency,
+  sessionCartId: z.string().min(1, 'Session cart id is required'),
+  userId: z.string().optional().nullable()
+})
