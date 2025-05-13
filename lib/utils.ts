@@ -43,3 +43,20 @@ export function round2(value: number | string) {
     throw new Error('Value is not a number or string')
   }
 }
+
+//currency formatter 
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  currency: 'GBP',
+  style: 'currency',
+  minimumFractionDigits: 2
+})
+
+export function formatCurrency(amount: number | string | null) {
+  if (typeof amount === 'number') {
+    return currencyFormatter.format(amount)
+  } else if (typeof amount === 'string') {
+    return currencyFormatter.format(Number(amount))
+  } else {
+    return 'NaN'
+  }
+}
