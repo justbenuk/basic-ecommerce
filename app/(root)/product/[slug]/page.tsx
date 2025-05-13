@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import ProductPrice from "@/components/products/product-price"
 import ProductImages from "@/components/products/product-images"
 import AddToCart from "@/components/cart/add-to-cart"
+import { getMyCart } from "@/actions/cart-actions"
 
 type ParamsProps = {
   params: Promise<{ slug: string }>
@@ -35,6 +36,8 @@ export default async function ProductDetailPage({ params }: ParamsProps) {
 
   //check to make sure we get a product back 
   if (!product) return notFound()
+
+  const cart = await getMyCart()
 
   return (
     <>
@@ -76,14 +79,16 @@ export default async function ProductDetailPage({ params }: ParamsProps) {
                 </div>
                 {product.stock > 0 && (
                   <div className="flex-center">
-                    <AddToCart item={{
-                      productId: product.id,
-                      name: product.name,
-                      slug: product.slug,
-                      price: product.price,
-                      qty: 1,
-                      image: product.images![0]
-                    }} />
+                    <AddToCart
+                      cart={cart}
+                      item={{
+                        productId: product.id,
+                        name: product.name,
+                        slug: product.slug,
+                        price: product.price,
+                        qty: 1,
+                        image: product.images![0]
+                      }} />
                   </div>
                 )}
               </CardContent>
