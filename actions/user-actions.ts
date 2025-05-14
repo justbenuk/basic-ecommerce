@@ -1,5 +1,7 @@
 "use server";
+import { z } from "zod";
 import {
+  paymentMethodSchema,
   shippingAddressSchema,
   signInFormScheme,
   signUpFormScheme,
@@ -107,6 +109,35 @@ export async function updateUserAddress(data: ShippingAddress) {
     return {
       success: false,
       message: "Failed to update address",
+    };
+  }
+}
+
+export async function updateUsersPaymentMethod(
+  data: z.infer<typeof paymentMethodSchema>,
+) {
+  try {
+    const session = await auth();
+    const currentUser = await db.user.findFirst({
+      where: { id: session?.user?.id },
+    });
+
+    if (!currentUser) throw new Error("User not found");
+
+    const paymentMethod = paymentMethodSchema.parse(data);
+    await db.user.update({
+      where: { id: currentUser.id },
+      data: { paymentMethod: paymentMethod.type },
+    });
+
+    return {
+      success: true,
+      message: "Payment method updated successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: formatError(error),
     };
   }
 }

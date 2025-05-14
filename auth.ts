@@ -6,6 +6,7 @@ import { compareSync } from "bcrypt-ts-edge";
 import type { NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import path from "node:path";
 
 export const config = {
   pages: {
@@ -110,6 +111,20 @@ export const config = {
     },
     // eslint-disable-next-line
     authorized({ request, auth }: any) {
+      //protecting routes
+      const protectedPaths = [
+        /\/shipping-address/,
+        /\/payment-method/,
+        /\/place-order/,
+        /\/user\/(.*)/,
+        /\/order\/(.*)/,
+        /\/admin/,
+      ];
+
+      //get the pathname from the request url object
+      const pathname = request.nextUrl;
+      if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
+
       //check for a session cart id
       if (!request.cookies.get("sessionCartId")) {
         //generate a new session cart id cookie

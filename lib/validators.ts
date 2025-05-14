@@ -70,3 +70,15 @@ export const shippingAddressSchema = z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
 });
+
+const PAYMENT_METHODS = ["Paypal", "Stripe", "Cash On Delivery"];
+
+//schema for pm
+export const paymentMethodSchema = z
+  .object({
+    type: z.string().min(1, "Payment method required"),
+  })
+  .refine((data) => PAYMENT_METHODS.includes(data.type), {
+    path: ["type"],
+    message: "Must choose a payment method",
+  });
