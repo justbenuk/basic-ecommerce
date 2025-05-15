@@ -5,8 +5,10 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { getMyCart } from "./cart-actions";
 import { getUserById } from "./user-actions";
 import { insertOrderSchema } from "@/lib/validators";
-import { CartItem } from "@/types";
-import { convertToPlainObject } from "@/lib/utils";
+import { CartItem, PaymentResult } from "@/types";
+import { convertToPlainObject, formatError } from "@/lib/utils";
+import { paypal } from "@/lib/paypal";
+import { revalidatePath } from "next/cache";
 
 export async function createOrder() {
   try {
@@ -112,4 +114,138 @@ export async function getOrderById(orderId: string) {
   });
 
   return convertToPlainObject(data);
+}
+
+//create new paypal order
+export async function createPaypalOrder(orderId: string) {
+  try {
+    const order = await db.order.findFirst({
+      where: { id: orderId },
+    });
+
+    if (order) {
+      //create paypal order
+      const paypalOrder = await paypal.createOrder(Number(order.totalPrice));
+
+      //update the order with payment response
+      await db.order.update({
+        where: { id: orderId },
+        data: {
+          paymentresult: {
+            id: paypalOrder.id,
+            email_address: "",
+            status: "",
+            pricePaid: 0,
+          },
+        },
+      });
+
+      return {
+        success: true,
+        message: "item order created",
+        data: paypalOrder.id,
+      };
+    } else {
+      throw new Error("Order not found");
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}
+
+export async function approvePaypalOrder(
+  orderId: string,
+  data: { orderID: string },
+) {
+  try {
+    const order = await db.order.findFirst({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new Error("Order not found");
+
+    const captureData = await paypal.capturePayment(data.orderID);
+
+    if (
+      !captureData ||
+      captureData.id !== (order.paymentresult as PaymentResult)?.id ||
+      captureData.status !== "COMPLETED"
+    ) {
+      throw new Error("Error in Paypal payment");
+    }
+
+    //update order to paid
+    await updateOrderToPaid({
+      orderId,
+      paymentResult: {
+        id: captureData.id,
+        status: captureData.status,
+        email_address: captureData.payer.email_address,
+        pricePaid:
+          captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
+      },
+    });
+    revalidatePath(`/order/${orderId}`);
+    return {
+      success: true,
+      message: "Your order has been paid",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: formatError(error),
+    };
+  }
+}
+
+async function updateOrderToPaid({
+  orderId,
+  paymentResult,
+}: {
+  orderId: string;
+  paymentResult?: PaymentResult;
+}) {
+  const order = await db.order.findFirst({
+    where: { id: orderId },
+    include: {
+      OrderItem: true,
+    },
+  });
+
+  if (!order) throw new Error("Order not found");
+  if (order.isPaid) throw new Error("Order is paid");
+  await db.$transaction(async (tx) => {
+    //change stock levels
+    for (const item of order.OrderItem) {
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stock: { increment: -item.qty } },
+      });
+    }
+
+    //set order to paid
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        isPaid: true,
+        paidAt: new Date(),
+        paymentresult: paymentResult,
+      },
+    });
+  });
+  //get updated order
+  const updatedOrder = await db.order.findFirst({
+    where: { id: orderId },
+    include: {
+      OrderItem: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!updatedOrder) throw new Error("Order not found");
 }

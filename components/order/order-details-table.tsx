@@ -1,5 +1,5 @@
 'use client'
-
+import { PayPalButtons, PayPalScriptProvider, usePayPalScriptReducer } from '@paypal/react-paypal-js'
 import { formatCurrency, formatDateTime, formatId } from "@/lib/utils"
 import { Order } from "@/types"
 import { Card, CardContent } from "../ui/card"
@@ -7,8 +7,50 @@ import { Badge } from "../ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import Link from "next/link"
 import Image from "next/image"
-export default function OrderdetailsTable({ order }: { order: Order }) {
+import { approvePaypalOrder, createPaypalOrder } from '@/actions/order-actions'
+import { toast } from 'sonner'
+export default function OrderdetailsTable({ order, paypalClientId }: { order: Order, paypalClientId: string }) {
   const { shippingPrice, shippingAddress, itemsPrice, OrderItem, taxPrice, totalPrice, paymentMethod, isPaid, isDelivered, id, paidAt } = order
+
+  function PrintLoadingState() {
+    const [{ isPending, isRejected }] = usePayPalScriptReducer()
+
+    let status = ''
+
+    if (isPending) {
+      status = 'Loading Paypal...'
+    } else if (isRejected) {
+      status = 'Loading Paypal Failed'
+    }
+    return status
+  }
+
+  async function handleCreatePaypalOrder() {
+    const response = await createPaypalOrder(order.id)
+
+    if (!response.success) {
+      toast('Payment Error', {
+        description: 'Failed to create payment'
+      })
+    }
+
+    return response.data
+  }
+
+  async function handleApprovePaypalOrder(data: { orderID: string }) {
+    console.log(data)
+    const response = await approvePaypalOrder(order.id, data)
+
+    console.log(response.message)
+
+    if (response.success) {
+      toast('Payment Made', {
+        description: response.message
+      })
+    }
+
+
+  }
   return (
     <>
       <h1 className="py-4 text-2xl">Order {formatId(id)}</h1>
@@ -19,7 +61,7 @@ export default function OrderdetailsTable({ order }: { order: Order }) {
               <h2 className="text-xl pb-4">Payment Method</h2>
               <p>{paymentMethod}</p>
               {isPaid ? (
-                <Badge variant={'secondary'}>Paid at {formatDateTime(paidAt!).dateTime}</Badge>
+                <Badge variant={'secondary'}>Paid on {formatDateTime(paidAt!).dateTime}</Badge>
               ) : (
                 <Badge variant={'destructive'}>Not Paid</Badge>
               )}
@@ -66,7 +108,6 @@ export default function OrderdetailsTable({ order }: { order: Order }) {
                   ))}
                 </TableBody>
               </Table>
-
             </CardContent>
           </Card>
         </div>
@@ -91,6 +132,15 @@ export default function OrderdetailsTable({ order }: { order: Order }) {
               </div>
             </CardContent>
           </Card>
+          {/* Paypal Payment*/}
+          {!isPaid && paymentMethod === 'Paypal' && (
+            <div>
+              <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "GBP" }}>
+                <PrintLoadingState />
+                <PayPalButtons createOrder={handleCreatePaypalOrder} onApprove={handleApprovePaypalOrder} />
+              </PayPalScriptProvider>
+            </div>
+          )}
         </div>
       </div>
     </>
