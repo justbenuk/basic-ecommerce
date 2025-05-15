@@ -1,0 +1,30 @@
+import { getOrderById } from "@/actions/order-actions"
+import OrderdetailsTable from "@/components/order/order-details-table"
+import { ShippingAddress } from "@/types"
+import { notFound } from "next/navigation"
+
+export const metadata = {
+  title: 'Your Order'
+}
+
+type ParamsProps = {
+  params: Promise<{ id: string }>
+}
+
+export default async function OrderDetailsPage({ params }: ParamsProps) {
+
+  const { id } = await params
+  const order = await getOrderById(id)
+
+  if (!order) return notFound()
+
+  return (
+    <>
+      <OrderdetailsTable order={{
+        ...order,
+        shippingAddress: order.shippingAddress as ShippingAddress
+      }} />
+    </>
+  )
+}
+
