@@ -2,6 +2,10 @@ import ProductList from "@/components/products/product-list";
 import { getLatesProducts } from "@/actions/product-actions";
 import { LATEST_PRODUCTS_LIMIT } from "@/lib/constants";
 
+export const metadata = {
+  title: 'Welcome'
+}
+
 export default async function HomePage() {
   const products = await getLatesProducts()
   return (

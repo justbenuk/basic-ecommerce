@@ -249,3 +249,35 @@ async function updateOrderToPaid({
 
   if (!updatedOrder) throw new Error("Order not found");
 }
+
+//get the users orders
+export async function getMyOrders({
+  limit = 2,
+  page,
+}: {
+  limit?: number;
+  page: number;
+}) {
+  const session = await auth();
+  if (!session) throw new Error("User not authorised");
+
+  const data = await db.order.findMany({
+    skip: (page - 1) * limit,
+    take: limit,
+    where: {
+      userId: session?.user?.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const dataCount = await db.order.count({
+    where: { userId: session?.user?.id },
+  });
+
+  return {
+    data,
+    totalPages: Math.ceil(dataCount / limit),
+  };
+}

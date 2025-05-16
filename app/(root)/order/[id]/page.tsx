@@ -15,6 +15,7 @@ export default async function OrderDetailsPage({ params }: ParamsProps) {
 
   const { id } = await params
   const order = await getOrderById(id)
+  const paypalClientId = process.env.PAYPAL_CLIENT_ID || 'sb'
 
   if (!order) return notFound()
 
@@ -24,7 +25,7 @@ export default async function OrderDetailsPage({ params }: ParamsProps) {
         ...order,
         shippingAddress: order.shippingAddress as ShippingAddress
       }}
-        paypalClientId={process.env.PAYPAL_CLIENT_ID || 'sb'} />
+        paypalClientId={paypalClientId} />
     </>
   )
 }
