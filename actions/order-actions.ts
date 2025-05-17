@@ -252,7 +252,7 @@ async function updateOrderToPaid({
 
 //get the users orders
 export async function getMyOrders({
-  limit = 2,
+  limit = 15,
   page,
 }: {
   limit?: number;

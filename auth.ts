@@ -6,7 +6,6 @@ import { compareSync } from "bcrypt-ts-edge";
 import type { NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import path from "node:path";
 
 export const config = {
   pages: {
@@ -106,6 +105,11 @@ export const config = {
             }
           }
         }
+      }
+
+      //handle session updates
+      if (session?.user?.name && trigger === "update") {
+        token.name = session.user.name;
       }
       return token;
     },
