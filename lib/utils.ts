@@ -18,7 +18,7 @@ export function formatNumberWithDecimal(num: number): string {
 
 //format errors
 // eslint-disable-next-line
-export async function formatError(error: any) {
+export function formatError(error: any) {
   if (error.name === "ZodError") {
     const fieldErrors = Object.keys(error.errors).map(
       (field) => error.errors[field].message,
@@ -65,6 +65,12 @@ export function formatCurrency(amount: number | string | null) {
   } else {
     return "NaN";
   }
+}
+
+//format number
+const numberFormatter = new Intl.NumberFormat("en-GB");
+export function formatNumber(number: number) {
+  return numberFormatter.format(number);
 }
 
 //shorten the order id

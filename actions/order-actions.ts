@@ -9,6 +9,7 @@ import { CartItem, PaymentResult } from "@/types";
 import { convertToPlainObject, formatError } from "@/lib/utils";
 import { paypal } from "@/lib/paypal";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 export async function createOrder() {
   try {
@@ -280,4 +281,80 @@ export async function getMyOrders({
     data,
     totalPages: Math.ceil(dataCount / limit),
   };
+}
+
+type SalesDataType = {
+  month: string;
+  totalSales: number;
+}[];
+
+//get sales data and order saummery
+export async function getOrderSummery() {
+  // get the counts for all resources
+  const ordersCount = await db.order.count();
+  const productsCount = await db.product.count();
+  const usersCount = await db.user.count();
+  // calculate the total sales
+  const totalSales = await db.order.aggregate({
+    _sum: { totalPrice: true },
+  });
+  // get the chart sales data
+  const salesDataRaw = await db.$queryRaw<
+    Array<{ month: string; totalSales: Prisma.Decimal }>
+  >`SELECT to_char("createdAt", 'MM/YY') as "month", sum("totalPrice") as "totalSales" FROM "Order" GROUP BY to_char("createdAt", 'MM/YY')`;
+
+  const salesData: SalesDataType = salesDataRaw.map((entry) => ({
+    month: entry.month,
+    totalSales: Number(entry.totalSales),
+  }));
+  // get the latest orders
+  const latestSales = await db.order.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    take: 6,
+  });
+
+  return {
+    ordersCount,
+    productsCount,
+    usersCount,
+    totalSales,
+    latestSales,
+    salesData,
+  };
+}
+
+//get all orders
+export async function getAllOrders({
+  limit = 20,
+  page,
+}: {
+  limit?: number;
+  page: number;
+}) {
+  const data = await db.order.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: limit,
+    skip: (page - 1) * limit,
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  const dataCount = await db.order.count();
+
+  return { data, totalPages: Math.ceil(dataCount / limit) };
 }
