@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ZodError } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,24 +19,24 @@ export function formatNumberWithDecimal(num: number): string {
 }
 
 //format errors
-// eslint-disable-next-line
-export function formatError(error: any) {
-  if (error.name === "ZodError") {
-    const fieldErrors = Object.keys(error.errors).map(
-      (field) => error.errors[field].message,
-    );
-
+export function formatError(error: unknown) {
+  if (error instanceof ZodError) {
+    const fieldErrors = error.errors.map((e) => e.message);
     return fieldErrors.join(". ");
-  } else if (
-    error.name === "PrismaClientKnownRequestError" &&
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   ) {
-    const field = error.meta?.target ? error.meta.target[0] : "Field";
-
+    const meta = error.meta as { target?: string[] } | undefined;
+    const field = meta?.target?.[0] ?? "Field";
     return `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
-  } else {
-    return typeof error.message === "string"
-      ? error.message
+  }
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message: unknown }).message;
+    return typeof message === "string"
+      ? message
       : JSON.stringify(error.message);
   }
 }

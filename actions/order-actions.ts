@@ -358,3 +358,16 @@ export async function getAllOrders({
 
   return { data, totalPages: Math.ceil(dataCount / limit) };
 }
+
+//delete an order
+export async function deleteOrder(id: string) {
+  try {
+    await db.order.delete({
+      where: { id },
+    });
+    revalidatePath("/admin/orders");
+    return { success: true, message: "Order Deleted" };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}

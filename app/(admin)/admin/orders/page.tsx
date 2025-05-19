@@ -1,4 +1,5 @@
-import { getAllOrders } from "@/actions/order-actions"
+import { deleteOrder, getAllOrders } from "@/actions/order-actions"
+import DeleteDialog from "@/components/shared/delete-dialog"
 import Pagination from "@/components/shared/pagination/pagination"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,7 +21,7 @@ export default async function AdminOrdersPage({ searchParams }: SearchParamProps
   await requireAdmin()
   const orders = await getAllOrders({
     page: Number(page),
-    limit: 2
+    limit: 20
   })
 
   return (
@@ -51,12 +52,7 @@ export default async function AdminOrdersPage({ searchParams }: SearchParamProps
                     Details
                   </Link>
                 </Button>
-                <Button asChild variant={'destructive'} size={'sm'}>
-                  <Link href={`/order/${order.id}`}>
-                    Delete
-                  </Link>
-                </Button>
-
+                <DeleteDialog action={deleteOrder} id={order.id} />
               </TableCell>
             </TableRow>
           ))}
