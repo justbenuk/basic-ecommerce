@@ -1,4 +1,5 @@
 import { getOrderById } from "@/actions/order-actions"
+import { auth } from "@/auth"
 import OrderdetailsTable from "@/components/order/order-details-table"
 import { ShippingAddress } from "@/types"
 import { notFound } from "next/navigation"
@@ -12,7 +13,7 @@ type ParamsProps = {
 }
 
 export default async function OrderDetailsPage({ params }: ParamsProps) {
-
+  const session = await auth()
   const { id } = await params
   const order = await getOrderById(id)
   const paypalClientId = process.env.PAYPAL_CLIENT_ID || 'sb'
@@ -25,7 +26,7 @@ export default async function OrderDetailsPage({ params }: ParamsProps) {
         ...order,
         shippingAddress: order.shippingAddress as ShippingAddress
       }}
-        paypalClientId={paypalClientId} />
+        paypalClientId={paypalClientId} isAdmin={session?.user?.role === 'admin' || false} />
     </>
   )
 }

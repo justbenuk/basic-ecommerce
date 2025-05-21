@@ -7,9 +7,22 @@ import { Badge } from "../ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import Link from "next/link"
 import Image from "next/image"
-import { approvePaypalOrder, createPaypalOrder } from '@/actions/order-actions'
+import { approvePaypalOrder, createPaypalOrder, deliverOrder, updateOrderToPaidCOD } from '@/actions/order-actions'
 import { toast } from 'sonner'
-export default function OrderdetailsTable({ order, paypalClientId }: { order: Order, paypalClientId: string }) {
+import { useTransition } from 'react'
+import { Button } from '../ui/button'
+import { Separator } from '../ui/separator'
+
+type OrderDetailsProps = {
+  order: Order
+  paypalClientId: string
+  isAdmin: boolean
+}
+
+
+
+export default function OrderdetailsTable({ order, paypalClientId, isAdmin }: OrderDetailsProps) {
+
   const { shippingPrice, shippingAddress, itemsPrice, OrderItem, taxPrice, totalPrice, paymentMethod, isPaid, isDelivered, id, paidAt } = order
 
   function PrintLoadingState() {
@@ -38,19 +51,38 @@ export default function OrderdetailsTable({ order, paypalClientId }: { order: Or
   }
 
   async function handleApprovePaypalOrder(data: { orderID: string }) {
-    console.log(data)
     const response = await approvePaypalOrder(order.id, data)
-
-    console.log(response.message)
-
     if (response.success) {
       toast('Payment Made', {
         description: response.message
       })
     }
+  }
 
+  function MarkAsPaid() {
+    const [isPending, startTransition] = useTransition()
+    return <Button type='button' disabled={isPending} onClick={() => startTransition(async () => {
+      await updateOrderToPaidCOD(order.id)
+      toast('Order', {
+        description: 'Order is paid'
+      })
+    })}
+      className='w-full'>{isPending ? 'Processing...' : 'Mark as paid'}</Button>
+  }
+
+  function MarkAsDelivered() {
+    const [isPending, startTransition] = useTransition()
+    return <Button variant={'secondary'} type='button' disabled={isPending} onClick={() => startTransition(async () => {
+      await deliverOrder(order.id)
+      toast('Delivery', {
+        description: 'Order has been delivered'
+      })
+    })}
+      className='w-full'>{isPending ? 'Processing...' : 'Mark as delivered'}</Button>
 
   }
+
+
   return (
     <>
       <h1 className="py-4 text-2xl">Order {formatId(id)}</h1>
@@ -126,9 +158,10 @@ export default function OrderdetailsTable({ order, paypalClientId }: { order: Or
                 <div>Shipping</div>
                 <div>{formatCurrency(shippingPrice)}</div>
               </div>
+              <Separator />
               <div className="flex justify-between">
-                <div>Total</div>
-                <div>{formatCurrency(totalPrice)}</div>
+                <div className='font-bold'>Total</div>
+                <div className='font-bold'>{formatCurrency(totalPrice)}</div>
               </div>
             </CardContent>
           </Card>
@@ -140,6 +173,12 @@ export default function OrderdetailsTable({ order, paypalClientId }: { order: Or
                 <PayPalButtons createOrder={handleCreatePaypalOrder} onApprove={handleApprovePaypalOrder} />
               </PayPalScriptProvider>
             </div>
+          )}
+          {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
+            <MarkAsPaid />
+          )}
+          {isAdmin && !isDelivered && (
+            <MarkAsDelivered />
           )}
         </div>
       </div>

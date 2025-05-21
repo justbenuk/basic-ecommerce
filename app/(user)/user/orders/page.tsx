@@ -18,7 +18,7 @@ export default async function OrdersPage({ searchParams }: searchParamsProps) {
   return (
     <div className="space-y-2">
       <h2 className="h2-bold">Orders</h2>
-      <Table>
+      <Table className="border mt-10">
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
@@ -31,7 +31,7 @@ export default async function OrdersPage({ searchParams }: searchParamsProps) {
         </TableHeader>
         <TableBody>
           {orders.data.map((order, idx) => (
-            <TableRow key={idx}>
+            <TableRow key={idx} className="even:bg-muted">
               <TableCell>{formatId(order.id)}</TableCell>
               <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
               <TableCell>{formatCurrency(order.totalPrice)}</TableCell>

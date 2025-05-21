@@ -27,7 +27,7 @@ export default async function AdminOrdersPage({ searchParams }: SearchParamProps
   return (
     <div className="space-y-2">
       <h2 className="h2-bold">All Orders</h2>
-      <Table>
+      <Table className="border rounded-xl mt-10">
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
@@ -40,7 +40,7 @@ export default async function AdminOrdersPage({ searchParams }: SearchParamProps
         </TableHeader>
         <TableBody>
           {orders.data.map((order, idx) => (
-            <TableRow key={idx}>
+            <TableRow key={idx} className="even:bg-muted">
               <TableCell>{formatId(order.id)}</TableCell>
               <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
               <TableCell>{formatCurrency(order.totalPrice)}</TableCell>

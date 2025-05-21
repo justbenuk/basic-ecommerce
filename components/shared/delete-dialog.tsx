@@ -18,12 +18,12 @@ export default function DeleteDialog({ id, action }: DeleteDialogProps) {
       const response = await action(id)
 
       if (!response.success) {
-        toast('Delete Order Error', {
+        toast('Delete Error', {
           description: response.message
         })
       } else (
-        toast('Delete Order', {
-          description: 'Order deleted successfully'
+        toast('Deleted', {
+          description: response.message
         })
       )
       setOpen(!open)

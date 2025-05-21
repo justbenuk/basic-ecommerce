@@ -5,13 +5,15 @@ import Menu from "@/components/shared/header/menu"
 import { APP_NAME } from "@/lib/constants"
 import { Input } from "@/components/ui/input"
 import AdminNav from "@/components/shared/navigation/admin-nav"
+import { requireAdmin } from "@/lib/auth-guard"
 
 
 type LayoutProps = {
   children: ReactNode
 }
 
-export default function AdminLayoutPage({ children }: LayoutProps) {
+export default async function AdminLayoutPage({ children }: LayoutProps) {
+  await requireAdmin()
   return (
     <div className="flex flex-col">
       <div className="border-b">
