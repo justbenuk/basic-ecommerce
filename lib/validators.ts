@@ -17,8 +17,8 @@ export const insertProductScheme = z.object({
   description: z.string().min(3, "Description must be at least 3 characters"),
   stock: z.coerce.number(),
   images: z.array(z.string()).min(1, "Product must have at least 1 image"),
-  isFeatured: z.boolean(),
-  banner: z.string().nullable(),
+  // isFeatured: z.boolean(),
+  // banner: z.string().nullable(),
   price: currency,
 });
 
@@ -41,7 +41,7 @@ export const signUpFormScheme = z
     confirmPassword: z.string().min(6, "Confirm Password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords dont match",
+    message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
@@ -50,7 +50,7 @@ export const cartItemScheme = z.object({
   productId: z.string().min(1, "Product is required"),
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
-  qty: z.number().int().nonnegative("Quantity must be a posative number"),
+  qty: z.number().int().nonnegative("Quantity must be a positive number"),
   image: z.string().min(1, "Image is required"),
   price: currency,
 });
@@ -67,7 +67,7 @@ export const insertCartScheme = z.object({
 
 export const shippingAddressSchema = z.object({
   fullName: z.string().min(1, "Name is required"),
-  streetAddress: z.string().min(1, "Street Adress is required"),
+  streetAddress: z.string().min(1, "Street Address is required"),
   city: z.string().min(1, "City is required"),
   postCode: z.string().min(1, "Postcode is required"),
   country: z.string().min(1, "Country is required"),

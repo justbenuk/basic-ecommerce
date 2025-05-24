@@ -43,6 +43,9 @@ export async function getAllProducts({
   const data = await db.product.findMany({
     skip: (page - 1) * limit,
     take: limit,
+    orderBy: {
+      createdAt: 'desc'
+    }
   });
 
   const dataCount = await db.product.count();
@@ -92,6 +95,7 @@ export async function createProduct(data: z.infer<typeof insertProductScheme>) {
 }
 
 export async function updateProduct(data: z.infer<typeof updateProductScheme>) {
+
   try {
     const product = updateProductScheme.parse(data);
     const productExists = await db.product.findFirst({
